@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+psycopg2-binary
+requests
+beautifulsoup4
+textblob
+scikit-learn
+numpy
+deep-translator
+langdetect

@@ -1,0 +1,7 @@
+confluent-kafka
+requests
+Pillow
+numpy
+opencv-python-headless
+boto3
+python-dotenv
