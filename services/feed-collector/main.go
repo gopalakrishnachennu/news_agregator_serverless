@@ -26,7 +26,7 @@ func main() {
 	// 1. Connect to DB
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
-		connStr = "postgres://news_user:news_password@localhost:5432/news_db?sslmode=disable"
+		log.Fatal("DATABASE_URL environment variable is required")
 	}
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
