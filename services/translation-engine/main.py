@@ -6,11 +6,11 @@ from psycopg2.extras import RealDictCursor
 from deep_translator import GoogleTranslator
 from langdetect import detect
 
-# Config
-DB_HOST = os.getenv("DB_HOST", "postgres")
-DB_NAME = os.getenv("DB_NAME", "news_db")
-DB_USER = os.getenv("DB_USER", "news_user")
-DB_PASS = os.getenv("DB_PASS", "news_password")
+# Config - all DB credentials must be provided via environment variables
+DB_HOST = os.environ["DB_HOST"]
+DB_NAME = os.environ["DB_NAME"]
+DB_USER = os.environ["DB_USER"]
+DB_PASS = os.environ["DB_PASS"]
 DB_PORT = os.getenv("DB_PORT", "5432")
 
 class Database:

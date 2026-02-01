@@ -1,14 +1,21 @@
 version: '3.8'
 
+# =============================================================================
+# Docker Compose Configuration
+# =============================================================================
+# For local development: Copy .env.local.example to .env and adjust values
+# For Tembo production: Use .env.tembo with your Tembo credentials
+# =============================================================================
+
 services:
   # --- Infrastructure ---
   postgres:
     image: pgvector/pgvector:pg15
     container_name: news_postgres
     environment:
-      POSTGRES_USER: news_user
-      POSTGRES_PASSWORD: news_password
-      POSTGRES_DB: news_db
+      POSTGRES_USER: ${POSTGRES_USER:-news_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-news_password}
+      POSTGRES_DB: ${POSTGRES_DB:-news_db}
     ports:
       - "5433:5432"
     volumes:
@@ -17,7 +24,7 @@ services:
     networks:
       - news-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U news_user -d news_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-news_user} -d ${POSTGRES_DB:-news_db}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -69,8 +76,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: minio_user
-      MINIO_ROOT_PASSWORD: minio_password
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio_user}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
@@ -82,7 +89,7 @@ services:
     depends_on:
       - minio
     environment:
-      - MC_HOST_local=http://minio_user:minio_password@minio:9000
+      - MC_HOST_local=http://${MINIO_ROOT_USER:-minio_user}:${MINIO_ROOT_PASSWORD:-minio_password}@minio:9000
     entrypoint: >
       /bin/sh -c "
       mc mb -p local/processed-images || true;
@@ -96,9 +103,9 @@ services:
     build: ./services/feed-collector
     restart: always
     environment:
-      - DATABASE_URL=postgres://news_user:news_password@postgres:5432/news_db?sslmode=disable
-      - KAFKA_BROKER=kafka:29092
-      - KAFKA_TOPIC=new-urls
+      - DATABASE_URL=${DATABASE_URL:-postgres://news_user:news_password@postgres:5432/news_db?sslmode=disable}
+      - KAFKA_BROKER=${KAFKA_BROKER:-kafka:29092}
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-new-urls}
     depends_on:
       - postgres
       - kafka
@@ -114,10 +121,10 @@ services:
     build: ./services/web-scraper
     restart: always
     environment:
-      - DATABASE_URL=postgres://news_user:news_password@postgres:5432/news_db?sslmode=disable
-      - KAFKA_BROKER=kafka:29092
-      - KAFKA_TOPIC=new-urls
-      - POLL_INTERVAL_MINUTES=5
+      - DATABASE_URL=${DATABASE_URL:-postgres://news_user:news_password@postgres:5432/news_db?sslmode=disable}
+      - KAFKA_BROKER=${KAFKA_BROKER:-kafka:29092}
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-new-urls}
+      - POLL_INTERVAL_MINUTES=${POLL_INTERVAL_MINUTES:-5}
     depends_on:
       - postgres
       - kafka
@@ -132,11 +139,11 @@ services:
       minio:
         condition: service_started
     environment:
-      KAFKA_BROKER: kafka:29092
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: minio_user
-      MINIO_SECRET_KEY: minio_password
+      KAFKA_BROKER: ${KAFKA_BROKER:-kafka:29092}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minio_user}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minio_password}
     networks:
       - news-network
 
@@ -148,11 +155,11 @@ services:
       minio:
         condition: service_started
     environment:
-      KAFKA_BROKER: kafka:29092
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: minio_user
-      MINIO_SECRET_KEY: minio_password
+      KAFKA_BROKER: ${KAFKA_BROKER:-kafka:29092}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minio_user}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minio_password}
     deploy:
       resources:
         limits:
@@ -169,10 +176,10 @@ services:
       minio:
         condition: service_started
     environment:
-      KAFKA_BROKER: kafka:29092
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: minio_user
-      MINIO_SECRET_KEY: minio_password
+      KAFKA_BROKER: ${KAFKA_BROKER:-kafka:29092}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minio_user}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minio_password}
     deploy:
       resources:
         limits:
@@ -189,8 +196,8 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      KAFKA_BROKER: kafka:29092
-      DATABASE_URL: postgres://news_user:news_password@postgres:5432/news_db?sslmode=disable
+      KAFKA_BROKER: ${KAFKA_BROKER:-kafka:29092}
+      DATABASE_URL: ${DATABASE_URL:-postgres://news_user:news_password@postgres:5432/news_db?sslmode=disable}
     networks:
       - news-network
 
@@ -207,10 +214,11 @@ services:
     container_name: sentiment-engine
     restart: always
     environment:
-      - DB_HOST=postgres
-      - DB_USER=news_user
-      - DB_PASS=news_password
-      - DB_NAME=news_db
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_USER=${DB_USER:-news_user}
+      - DB_PASS=${DB_PASS:-news_password}
+      - DB_NAME=${DB_NAME:-news_db}
+      - DB_PORT=${DB_PORT:-5432}
     depends_on:
       - postgres
     networks:
@@ -221,11 +229,12 @@ services:
     container_name: translation-engine
     restart: always
     environment:
-      - DB_HOST=postgres
-      - DB_USER=news_user
-      - DB_PASS=news_password
-      - DB_NAME=news_db
-      - DATABASE_URL=postgresql://news_user:news_password@postgres:5432/news_db
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_USER=${DB_USER:-news_user}
+      - DB_PASS=${DB_PASS:-news_password}
+      - DB_NAME=${DB_NAME:-news_db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://news_user:news_password@postgres:5432/news_db}
     depends_on:
       - postgres
     networks:

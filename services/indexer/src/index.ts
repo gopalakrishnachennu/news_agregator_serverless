@@ -3,8 +3,11 @@ import { Pool } from 'pg';
 import axios from 'axios';
 
 // --- DB Setup ---
+if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required');
+}
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgres://news_user:news_password@localhost:5432/news_db'
+    connectionString: process.env.DATABASE_URL
 });
 
 // --- Kafka Setup ---

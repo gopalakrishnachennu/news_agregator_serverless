@@ -15,8 +15,13 @@ type Config struct {
 func Load() *Config {
 	pollInterval, _ := strconv.Atoi(getEnv("POLL_INTERVAL_MINUTES", "5"))
 
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		panic("DATABASE_URL environment variable is required")
+	}
+
 	return &Config{
-		DatabaseURL:  getEnv("DATABASE_URL", "postgres://news_user:news_password@postgres:5432/news_db"),
+		DatabaseURL:  dbURL,
 		KafkaBroker:  getEnv("KAFKA_BROKER", "kafka:9092"),
 		KafkaTopic:   getEnv("KAFKA_TOPIC", "new-urls"),
 		PollInterval: pollInterval,
