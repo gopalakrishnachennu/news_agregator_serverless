@@ -1,5 +1,4 @@
 {
-  "rootDirectory": "apps/web",
   "crons": [
     {
       "path": "/api/cron/collect-feeds",
