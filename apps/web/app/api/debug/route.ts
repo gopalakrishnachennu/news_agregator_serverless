@@ -1,6 +1,19 @@
 import { getDb } from '@/lib/firebase';
 
 export async function GET() {
+    const pk = process.env.FIREBASE_PRIVATE_KEY || '';
+    let decodedPreview = 'none';
+    let decodeError = null;
+
+    try {
+        if (pk && !pk.includes('-----BEGIN')) {
+            const buf = Buffer.from(pk, 'base64');
+            decodedPreview = buf.toString('utf-8').slice(0, 30);
+        }
+    } catch (e: any) {
+        decodeError = e.message;
+    }
+
     try {
         const db = getDb();
 
@@ -18,20 +31,19 @@ export async function GET() {
             firebase: 'connected',
             data: doc.data(),
             projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL?.slice(0, 20) + '...',
-            hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-            privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length,
+            privateKeyLength: pk.length,
+            decodeTest: decodedPreview,
+            decodeError: decodeError,
             adminSecretSet: !!process.env.ADMIN_SECRET,
         });
     } catch (error: any) {
         return Response.json({
             status: 'error',
             error: error.message,
-            stack: error.stack?.slice(0, 500),
             projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL?.slice(0, 20) + '...',
-            hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-            privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length,
+            privateKeyLength: pk.length,
+            decodeTest: decodedPreview,
+            decodeError: decodeError,
             adminSecretSet: !!process.env.ADMIN_SECRET,
         }, { status: 500 });
     }
