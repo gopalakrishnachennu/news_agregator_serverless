@@ -1,0 +1,21 @@
+{
+  "rootDirectory": "apps/web",
+  "crons": [
+    {
+      "path": "/api/cron/collect-feeds",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/process-articles",
+      "schedule": "* * * * *"
+    }
+  ],
+  "functions": {
+    "app/api/cron/collect-feeds/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/process-articles/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
