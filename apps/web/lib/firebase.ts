@@ -11,7 +11,25 @@ function getFirebaseApp(): App {
 
     const projectId = process.env.FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    // Handle Base64 encoded private key (to avoid Vercel newline issues)
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    if (privateKey && !privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+        try {
+            const buffer = Buffer.from(privateKey, 'base64');
+            privateKey = buffer.toString('utf-8');
+        } catch (e) {
+            // ignore error, might be just a wrong key
+        }
+    }
+
+    if (privateKey) {
+        // If the key contains literal \n strings, replace them with actual newlines
+        if (privateKey.includes('\\n')) {
+            privateKey = privateKey.replace(/\\n/g, '\n');
+        }
+        // Remove any trailing whitespace
+        privateKey = privateKey.trim();
+    }
 
     if (!projectId || !clientEmail || !privateKey) {
         throw new Error('Firebase credentials not configured');
